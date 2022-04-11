@@ -25,7 +25,7 @@ module.exports = {
         clean: true,
 
         // Config the assets output using the resource's file name and extension
-        assetModuleFilename: "[name][ext]"
+        assetModuleFilename: "./assets/[name][ext]"
     },
 
     // Configure source maps
