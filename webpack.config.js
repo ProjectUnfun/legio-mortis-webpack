@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
     // Mode webpack should use (see production and deveopment)
-    mode: "production",
+    mode: "development",
 
     // Where to look for the main JS source file
     entry: {
