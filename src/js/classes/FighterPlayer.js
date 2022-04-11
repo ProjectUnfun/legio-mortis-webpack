@@ -21,16 +21,16 @@ class FighterPlayer extends Phaser.Physics.Arcade.Sprite {
         // Set player move speed
         this.playerMoveSpeed = 180;
 
-        // TEMP CODE UNTIL COMBAT CONFIG IS ADDED
-        this.body.setSize(28, 28);
-        this.body.setOffset(19, 28);
-
         // Create animations
         this.createWalkAnimations();
+        this.createAttackAnimations();
 
         // Set default animation status
         this.currentDirection = Direction.DOWN;
         this.setFrame(18);
+
+        // Config combat
+        this.configCombat();
 
         // Make the game camera follow the player
         this.scene.cameras.main.startFollow(this);
@@ -42,6 +42,95 @@ class FighterPlayer extends Phaser.Physics.Arcade.Sprite {
     update(cursors) {
         this.checkIdle(cursors);
         this.checkMovement(cursors);
+        this.checkAttack(cursors);
+    }
+
+    // Method configs combat
+    configCombat() {
+        // Config physics body
+        this.body.setSize(27, 27);
+        this.body.setOffset(19, 28);
+
+        // Track damage dealing status
+        this.isAttacking = false;
+
+        // Track damage receiving status
+        this.canBeAttacked = true;
+
+        // Create hitbox physics body
+        this.hitbox = this.scene.add.image(this.x, this.y, "meleeHitbox");
+
+        // Enable hitbox physics
+        this.scene.physics.world.enable(this.hitbox);
+
+        // Set default hitbox status
+        this.hitbox.setAlpha(0);
+        this.makeHitboxInactive();
+    }
+
+    // Method handles hitbox location assignment
+    checkAttack(cursors) {
+        if (Phaser.Input.Keyboard.JustDown(cursors.space) && !this.isAttacking) {
+            // Stop animations and movement, alter attacking flag
+            this.anims.stop();
+            this.body.setVelocity(0);
+            this.isAttacking = true;
+
+            // Determine direction, appropriate animation, and hitbox location
+            if (this.currentDirection === Direction.DOWN) {
+                this.anims.play("attackDown", true);
+                this.hitbox.x = this.x + 1;
+                this.hitbox.y = this.y + 16;
+            }
+            else if (this.currentDirection === Direction.UP) {
+                this.anims.play("attackUp", true);
+                this.hitbox.x = this.x + 1;
+                this.hitbox.y = this.y - 8;
+            }
+            else if (this.currentDirection === Direction.LEFT) {
+                this.anims.play("attackLeft", true);
+                this.hitbox.x = this.x - 16;
+                this.hitbox.y = this.y + 6;
+            }
+            else if (this.currentDirection === Direction.RIGHT) {
+                this.anims.play("attackRight", true);
+                this.hitbox.x = this.x + 16;
+                this.hitbox.y = this.y + 6;
+            }
+
+            // Activate hitbox for attack detection
+            this.makeHitboxActive();
+
+            // Delay player attack repetition by .3 seconds
+            this.scene.time.delayedCall(
+                300,
+                () => {
+                    // Reset flag & deactivate hitbox
+                    this.isAttacking = false;
+                },
+                [],
+                this
+            );
+        }
+        else {
+            if (this.hitbox.active) {
+                this.makeHitboxInactive();
+            }
+        }
+    }
+
+    // Method make hitbox active for attack overlap checking
+    makeHitboxActive() {
+        // Activate hitbox overlap checking
+        this.hitbox.setActive(true);
+        this.hitbox.body.checkCollision.none = false;
+    }
+
+    // Method makes hitbox inactive to prevent attack overlap checking
+    makeHitboxInactive() {
+        // Deactivate hitbox overlap checking
+        this.hitbox.setActive(false);
+        this.hitbox.body.checkCollision.none = true;
     }
 
     // Method handles idle status
@@ -151,6 +240,53 @@ class FighterPlayer extends Phaser.Physics.Arcade.Sprite {
                 end: 35,
             }),
             frameRate: rateOfFrames,
+            repeat: repeatValue,
+        });
+    }
+
+    // Method generates frames for attack animations
+    createAttackAnimations() {
+        let rateOfFrames = 20;
+        let repeatValue = 0;
+
+        this.anims.create({
+            key: "attackUp",
+            frames: this.anims.generateFrameNumbers("meleeAttack", {
+                start: 0,
+                end: 5,
+            }),
+            frameRate: rateOfFrames,
+            yoyo: true,
+            repeat: repeatValue,
+        });
+        this.anims.create({
+            key: "attackLeft",
+            frames: this.anims.generateFrameNumbers("meleeAttack", {
+                start: 6,
+                end: 11,
+            }),
+            frameRate: rateOfFrames,
+            yoyo: true,
+            repeat: repeatValue,
+        });
+        this.anims.create({
+            key: "attackDown",
+            frames: this.anims.generateFrameNumbers("meleeAttack", {
+                start: 12,
+                end: 17,
+            }),
+            frameRate: rateOfFrames,
+            yoyo: true,
+            repeat: repeatValue,
+        });
+        this.anims.create({
+            key: "attackRight",
+            frames: this.anims.generateFrameNumbers("meleeAttack", {
+                start: 18,
+                end: 23,
+            }),
+            frameRate: rateOfFrames,
+            yoyo: true,
             repeat: repeatValue,
         });
     }
